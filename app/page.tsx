@@ -1,69 +1,76 @@
-import Image from "next/image";
+import Link from "next/link";
+import { ChevronRight } from "lucide-react";
+import { ScoreboardRail } from "@/components/brand-mark";
+import { ConstituencyGrid } from "@/components/constituency-grid";
+import { FinalCta } from "@/components/final-cta";
+import { Hero } from "@/components/hero";
+import { HowItWorks } from "@/components/how-it-works";
+import { LiveLeaders } from "@/components/live-leaders";
+import { SiteFooter } from "@/components/site-footer";
+import { SiteHeader } from "@/components/site-header";
+import { SponsorSection } from "@/components/sponsor-badge";
+import { StickyVoteCta } from "@/components/sticky-vote-cta";
+import { TournamentStats } from "@/components/tournament-stats";
+import { getRepositories } from "@/lib/db";
+import { getAllStandings, getTournamentStats } from "@/lib/services/results";
 
-export default function Home() {
+// Votes change the numbers on this page, so it is rendered per request.
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
+export default async function HomePage() {
+  const repositories = getRepositories();
+  const [stats, standings] = await Promise.all([
+    getTournamentStats(repositories),
+    getAllStandings(repositories),
+  ]);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+    <>
+      <SiteHeader />
+      <main id="main" className="pb-24 md:pb-0">
+        <Hero stats={stats} />
+        <TournamentStats stats={stats} />
+
+        <section
+          id="vidhan-sabha"
+          aria-labelledby="vidhan-sabha-heading"
+          className="mx-auto max-w-6xl scroll-mt-20 px-4 py-16 sm:px-6 sm:py-20"
+        >
+          <ScoreboardRail className="mb-10" />
+
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div className="max-w-2xl">
+              <h2
+                id="vidhan-sabha-heading"
+                className="display text-[clamp(2rem,7vw,3.25rem)] text-chalk"
+              >
+                Nau Vidhan Sabha
+              </h2>
+              <p className="mt-4 text-[0.9375rem] leading-relaxed text-chalk-dim sm:text-base">
+                Apna kshetra chunein aur wahan ki participating teams dekhein.
+                Har kshetra se ek team tournament tak jaayegi.
+              </p>
+            </div>
+            <Link
+              href="/vidhan-sabha"
+              className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-floodlight hover:text-floodlight-soft"
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+              Sabhi Vidhan Sabha
+              <ChevronRight className="h-4 w-4" aria-hidden />
+            </Link>
+          </div>
+
+          <ConstituencyGrid standings={standings} className="mt-8" />
+        </section>
+
+        <HowItWorks />
+        <LiveLeaders standings={standings} />
+        <SponsorSection />
+        <FinalCta votingStatus={stats.votingStatus} />
       </main>
-    </div>
+      <SiteFooter />
+      {stats.votingStatus === "open" && <StickyVoteCta />}
+    </>
   );
 }
